@@ -6,9 +6,6 @@ set(0, 'DefaultTextInterpreter', 'Latex')
 set(0, 'DefaultLegendInterpreter', 'Latex')
 set(0, 'DefaultAxesTickLabelInterpreter', 'Latex')
 
-
-addpath('/Users/willem/Documents/tools/aboxplot')
-
 %% Import paths
 
 colorgrd = 'blue_down';
@@ -24,8 +21,8 @@ m_cmap2 = colorgrad(3,colorgrd);
 D_balanced = load('data_balanced.mat')
 D_unbalanced = load('data_unbalanced.mat')
 
-E_real_b = real(D_balanced.data.deltaE);
-E_imag_b = imag(D_balanced.data.deltaE);
+E_real_b = real(E_delta);
+E_imag_b = imag(E_delta);
 
 E_real_u = real(D_unbalanced.data.deltaE);
 E_imag_u = imag(D_unbalanced.data.deltaE);
@@ -35,7 +32,7 @@ ndc = 55:62;
 
 %% Plot
 
-folder = '/Users/willem/Documents/phd/Optimal_power_flow/Figures';
+folder = './Plots/figures';
 file_name = fullfile(folder, 'LoadFlow_Error'); 
 
 f1 = figure('Renderer', 'painters', 'Position', [10 10 850 550])
@@ -82,7 +79,7 @@ hold on
     xlabel('$ \Delta V$ [p.u.]');
 hold off
 
-exportgraphics(f1,'/Users/willem/Documents/phd/Optimal_power_flow/figures/LoadFlow_Error.jpg','BackgroundColor','none')
+% exportgraphics(f1,'/Users/willem/Documents/phd/Optimal_power_flow/figures/LoadFlow_Error.jpg','BackgroundColor','none')
 % saveas(f1,[file_name],'depsc');
 saveas(f1,[file_name],'jpg');
 

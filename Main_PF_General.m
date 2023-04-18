@@ -53,7 +53,7 @@ Grid_para = Get_Converter_para(idx1,linedata,Grid_para);
 %% Get the EMTP measurements
 
 % Load data of nodal voltage and power injections from the .mat file
-load('data_unbalanced_light.mat') %data_balanced.mat OR data_unbalanced_light.mat OR data_unbalanced_strong.mat OR data_unbalanced_strong_wlosses.mat
+load('data_balanced.mat') %data_balanced.mat OR data_unbalanced_light.mat OR data_unbalanced_strong.mat OR data_unbalanced_strong_wlosses.mat
 E_star = data.E_star;
 S_star = data.S_star;
 
@@ -112,3 +112,6 @@ subplot(2,1,2)
 scatter(1:62,imag(E_delta))
 ylabel('Delta E - imaginary')
 
+%% Save data for pretty figure
+save('data_balanced.mat','E_delta')
+% save('data_unbalanced.mat','E_delta')
