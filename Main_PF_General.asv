@@ -5,7 +5,7 @@ close all;
 clc;
 
 %% Simulation options
-addpath(genpath('./acdc-power-flow'))
+addpath(genpath(pwd))
 
 %% Import paths
 
@@ -73,22 +73,31 @@ Grid_para = Get_Converter_para(idx1,linedata,Grid_para);
 
 
 % Get the EMTP measurements
-repeat=1;
-ZIN_polyphase = [];
-[Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc_LF, n_timesteps, Mreal, Mimag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M_LF] = GetEMTPdata_LF(A_b,V_b,Adc_b, Vdc_b,repeat,ZIN_polyphase,Grid_para.n_ph);
 
-Nodal_V_mag = Nodal_V_mag(end,:);
-Nodal_V_angle =  Nodal_V_angle(end,:);
+%load data of nodal voltage and power injections from the .mat file
+load('data_unbalanced_slight.mat') %data_balanced.mat OR data_unbalanced_slight.mat OR data_unbalanced_large.mat OR data_unbalanced_large_wlosses.mat
+E_star = data_unbalanced_slight.E_star;
+S_star = data_unbalanced_slight.S_star;
 
-Nodal_P =  Nodal_P(end,:);
-Nodal_Q =  Nodal_Q(end,:);
-Pdc_inj =  Pdc_inj(end,:);
+%Get data directly from EMPT simulation
 
-V_complex_LF = transpose(complex(Nodal_V_mag.*cos(Nodal_V_angle), Nodal_V_mag.*sin(Nodal_V_angle)));
-Vdc_LF = transpose(Vdc_LF);
+% repeat=1;
+% ZIN_polyphase = [];
+% [Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc_LF, n_timesteps, Mreal, Mimag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M_LF] = GetEMTPdata_LF(A_b,V_b,Adc_b, Vdc_b,repeat,ZIN_polyphase,Grid_para.n_ph);
+% 
+% Nodal_V_mag = Nodal_V_mag(end,:);
+% Nodal_V_angle =  Nodal_V_angle(end,:);
+% 
+% Nodal_P =  Nodal_P(end,:);
+% Nodal_Q =  Nodal_Q(end,:);
+% Pdc_inj =  Pdc_inj(end,:);
+% 
+% V_complex_LF = transpose(complex(Nodal_V_mag.*cos(Nodal_V_angle), Nodal_V_mag.*sin(Nodal_V_angle)));
+% Vdc_LF = transpose(Vdc_LF);
+% 
+% E_star = [V_complex_LF(1:end,1); Vdc_LF(:,1)];
+% S_star = [transpose(complex(Nodal_P, Nodal_Q)); transpose(complex(Pdc_inj,0))];
 
-E_star = [V_complex_LF(1:end,1); Vdc_LF(:,1)];
-S_star = E_star.*conj(YY*E_star); %[transpose(complex(Nodal_P, Nodal_Q)); transpose(complex(Pdc_inj,0))];
 
 % Set the filter parameters
 Filter_para.R = 0.008*Y_b; %checked

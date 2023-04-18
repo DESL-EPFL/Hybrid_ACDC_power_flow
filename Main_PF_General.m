@@ -1,30 +1,12 @@
-% main script for linear power system state estimation
+%% main script for linear power system state estimation
 
 clear all;
 close all;
 clc;
 
-%% Simulation options
-addpath(genpath('/acdc-power-flow'))
+addpath(genpath(pwd))
 
-%% Import paths
-
-% addpath '/Users/willem/Documents/phd/Micro grid specs/'
-% addpath('/Users/willem/Documents/phd/State_estimation')
-% VSI_name = '/Users/willem/Documents/phd/Micro grid specs/DCdata.txt';
-% DC_grid_name = '/Users/willem/Documents/phd/Micro grid specs/DCgrid_data2.txt';
-% linedata_DCgrid = '/Users/willem/Documents/phd/Micro grid specs/linedata_DCgrid.txt';
-% folder= '/Users/willem/Documents/phd/State_estimation/matlab_Full_SE_3phase/bad data rejection';
-% addpath '/Users/willem/Documents/phd/Optimal_power_flow/Sensitivity_codes'
-
-   
-    
-%% Generalized LF algorithm
-% clear all;
-% close all;
-% clc;
-
-% Base values
+%% Base values
 A_b = 1e5;
 V_b= 400;
 Y_b = A_b/V_b^2; 
@@ -33,9 +15,7 @@ Vdc_b = 800;
 Adc_b = A_b;
 Ydc_b = Adc_b/Vdc_b^2; 
 
-
-
-% Set the Grid parameters
+%% Set the Grid parameters
 Grid_para.n_dc = 8;
 Grid_para.n_ac = 18;
 Grid_para.n_ph = 3;
@@ -52,8 +32,7 @@ YY = blkdiag(Yac,Ydc);
 Grid_para.G = real(YY);
 Grid_para.B = imag(YY);
 
-
-% Set the nodes types
+%% Set the nodes types
 idx1.slack = 1;
 idx1.pqac = [2:14]';
 idx1.pvac = []';
@@ -71,26 +50,34 @@ idx = Get_multiphase_Node_indices(idx1,Grid_para);
 linedata = [linedata_ac;linedata_dc];
 Grid_para = Get_Converter_para(idx1,linedata,Grid_para);
 
+%% Get the EMTP measurements
 
-% Get the EMTP measurements
-repeat=1;
-ZIN_polyphase = [];
-[Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc_LF, n_timesteps, Mreal, Mimag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M_LF] = GetEMTPdata_LF(A_b,V_b,Adc_b, Vdc_b,repeat,ZIN_polyphase,Grid_para.n_ph);
+% Load data of nodal voltage and power injections from the .mat file
+load('data_unbalanced_light.mat') %data_balanced.mat OR data_unbalanced_light.mat OR data_unbalanced_strong.mat OR data_unbalanced_strong_wlosses.mat
+E_star = data.E_star;
+S_star = data.S_star;
 
-Nodal_V_mag = Nodal_V_mag(end,:);
-Nodal_V_angle =  Nodal_V_angle(end,:);
+% Get data directly from EMPT simulation
+% 
+% repeat=1;
+% ZIN_polyphase = [];
+% [Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc_LF, n_timesteps, Mreal, Mimag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M_LF] = GetEMTPdata_LF(A_b,V_b,Adc_b, Vdc_b,repeat,ZIN_polyphase,Grid_para.n_ph);
+% 
+% Nodal_V_mag = Nodal_V_mag(end,:);
+% Nodal_V_angle =  Nodal_V_angle(end,:);
+% 
+% Nodal_P =  Nodal_P(end,:);
+% Nodal_Q =  Nodal_Q(end,:);
+% Pdc_inj =  Pdc_inj(end,:);
+% 
+% V_complex_LF = transpose(complex(Nodal_V_mag.*cos(Nodal_V_angle), Nodal_V_mag.*sin(Nodal_V_angle)));
+% Vdc_LF = transpose(Vdc_LF);
+% 
+% E_star = [V_complex_LF(1:end,1); Vdc_LF(:,1)];
+% S_star = [transpose(complex(Nodal_P, Nodal_Q)); transpose(complex(Pdc_inj,0))];
 
-Nodal_P =  Nodal_P(end,:);
-Nodal_Q =  Nodal_Q(end,:);
-Pdc_inj =  Pdc_inj(end,:);
 
-V_complex_LF = transpose(complex(Nodal_V_mag.*cos(Nodal_V_angle), Nodal_V_mag.*sin(Nodal_V_angle)));
-Vdc_LF = transpose(Vdc_LF);
-
-E_star = [V_complex_LF(1:end,1); Vdc_LF(:,1)];
-S_star = E_star.*conj(YY*E_star); %[transpose(complex(Nodal_P, Nodal_Q)); transpose(complex(Pdc_inj,0))];
-
-% Set the filter parameters
+%% Set the filter parameters
 Filter_para.R = 0.008*Y_b; %checked
 Filter_para.X = 0.04*Y_b;  %checked
 Filter_para.IGBT_piecewise = [  0                   0
@@ -103,15 +90,15 @@ Filter_para.IGBT_piecewise = [  0                   0
 Filter_para.Exclude_losses = 1;
 
 
-% Initialize
+%% Initialize
 E_0 = [repmat([1; exp(-1i*pi*2/3);  exp(1i*pi*2/3) ], Grid_para.n_ac,1 ) ; ones(Grid_para.n_dc,1)];
 
-% Solve the PF
+%% Solve the PF
 tol = 1e-7;
 n_max = 100;
 [E,J,n_iter] = NR_rectangularACDC_3ph_general(Grid_para,Filter_para,S_star,E_star,E_0,idx,tol,n_max);
 
-% Visualize the solution
+%% Visualize the solution
 
 E_delta = E - E_star;
 S_delta = E.*conj(YY*E) - S_star;
@@ -124,13 +111,4 @@ ylabel('Delta E - real')
 subplot(2,1,2)
 scatter(1:62,imag(E_delta))
 ylabel('Delta E - imaginary')
-
-% figure (2)
-% subplot(2,1,1)
-% scatter(1:62,real(S_delta))
-% ylabel('Delta S - real')
-% 
-% subplot(2,1,2)
-% scatter(1:62,imag(S_delta))
-% ylabel('Delta S - imaginary')
 

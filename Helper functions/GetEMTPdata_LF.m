@@ -1,23 +1,13 @@
 function [Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc, n_timesteps, M_real, M_imag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M] = GetEMTPdata_LF(A_b,V_b,Adc_b, Vdc_b,repeat,ZIN,n_phases) 
-    addpath '/Users/willem/Documents/phd/State_estimation/Phasor'
-    addpath '/Users/willem/Documents/phd/State_estimation/Phasor/biblio'
-%     data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/GridV10.3.mat');
-%     data =
-%     load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/QV_control_Rf0.1_V5.mat');%
-%     step in P09 and P23
-%     data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/QV_control_Rf0.1_V6_6.mat');
+
 
 %% balanced
-%     data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/GridV7.2all.mat'); 
-%     max_range = 10500;
+   data = load('ACDC_balanced.mat'); 
 %% unbalanced
-    data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/Full_grid_AVG_noloss_balanced_7.mat'); %  balamced
-%     data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/Full_grid_AVG_noloss_unbalanced_8.mat'); % light unblance
-%     data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/Full_grid_AVG_noloss_unbalanced_9.mat'); % very strong unblance
-%     data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/Full_grid_AVG_noloss_unbalanced_10.mat'); % very strong unblance + filter
+   data = load('ACDC_unbalanced_light.mat'); % light unblance
+   data = load('ACDC_unbalanced_strong.mat'); % very strong unblance
+   data = load('ACDC_unbalanced_strong_wlosses.mat'); % very strong unblance + filter
     
-    
-% % %     data = load('/Users/willem/Documents/phd/State_estimation/EMTP/Experiments/Full_unbalanced_1.mat');
     max_range = floor(length(data.B01_Va_mag_control)/10)*10;
    
     I_b = A_b/(V_b.*sqrt(3));
