@@ -53,12 +53,12 @@ Grid_para = Get_Converter_para(idx1,linedata,Grid_para);
 %% Get the EMTP measurements
 
 % Load data of nodal voltage and power injections from the .mat file
-load('data_unbalanced_light.mat') %'data_balanced.mat' OR 'data_unbalanced_light.mat' OR 'data_unbalanced_strong.mat' OR 'data_unbalanced_strong_wlosses.mat'
+load('data_balanced.mat') %'data_balanced.mat' OR 'data_unbalanced_light.mat' OR 'data_unbalanced_strong.mat' OR 'data_unbalanced_strong_wlosses.mat'
 E_star = data.E_star;
 S_star = data.S_star;
 
 % Get data directly from EMPT simulation
-
+% 
 % repeat=1;
 % ZIN_polyphase = [];
 % [Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc_LF, n_timesteps, Mreal, Mimag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M_LF] = GetEMTPdata_LF(A_b,V_b,Adc_b, Vdc_b,repeat,ZIN_polyphase,Grid_para.n_ph);
@@ -75,7 +75,6 @@ S_star = data.S_star;
 % 
 % E_star = [V_complex_LF(1:end,1); Vdc_LF(:,1)];
 % S_star = [transpose(complex(Nodal_P, Nodal_Q)); transpose(complex(Pdc_inj,0))];
-
 
 
 %% Set the filter parameters
@@ -114,5 +113,5 @@ scatter(1:62,imag(E_delta))
 ylabel('Delta E - imaginary')
 
 %% Save data for pretty figure
-% save('Plots/results_balanced2.mat','E_delta')
-% save('Plots/results_unbalanced.mat','E_delta')
+save('data_balanced.mat','E_delta')
+% save('data_unbalanced.mat','E_delta')

@@ -18,8 +18,8 @@ m_cmap2 = colorgrad(3,colorgrd);
 
 
 
-D_balanced = load('data_balanced.mat')
-D_unbalanced = load('data_unbalanced.mat')
+D_balanced = load('results_balanced.mat');
+D_unbalanced = load('results_unbalanced.mat');
 
 E_real_b = real(D_balanced.E_delta);
 E_imag_b = imag(D_balanced.E_delta);
@@ -79,12 +79,9 @@ hold on
     xlabel('$ \Delta V$ [p.u.]');
 hold off
 
-% exportgraphics(f1,'/Users/willem/Documents/phd/Optimal_power_flow/figures/LoadFlow_Error.jpg','BackgroundColor','none')
-% saveas(f1,[file_name],'depsc');
-saveas(f1,[file_name],'jpg');
+% saveas(f1,[file_name],'jpg');
 
 %% black 'n white
-
 % 
 % f2 = figure('Renderer', 'painters', 'Position', [10 10 800 600])
 % clf;
