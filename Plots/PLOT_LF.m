@@ -21,11 +21,11 @@ m_cmap2 = colorgrad(3,colorgrd);
 D_balanced = load('data_balanced.mat')
 D_unbalanced = load('data_unbalanced.mat')
 
-E_real_b = real(E_delta);
-E_imag_b = imag(E_delta);
+E_real_b = real(D_balanced.E_delta);
+E_imag_b = imag(D_balanced.E_delta);
 
-E_real_u = real(D_unbalanced.data.deltaE);
-E_imag_u = imag(D_unbalanced.data.deltaE);
+E_real_u = real(D_unbalanced.E_delta);
+E_imag_u = imag(D_unbalanced.E_delta);
 
 nac = 1:54;
 ndc = 55:62;
