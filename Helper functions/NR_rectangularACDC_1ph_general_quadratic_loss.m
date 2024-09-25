@@ -1,4 +1,4 @@
-function [E,J,n_iter] = NR_rectangularACDC_3ph_general(Grid_para,Filter_para,S_star,E_star,idx,simulation_para)
+function [E,J,n_iter,time] = NR_rectangularACDC_1ph_general_quadratic_loss(Grid_para,Filter_para,S_star,E_star,idx,simulation_para)
 % INPUT
 % - Grid_para   
 % - Filter_para
@@ -16,10 +16,12 @@ function [E,J,n_iter] = NR_rectangularACDC_3ph_general(Grid_para,Filter_para,S_s
 % - J           Jacobian at the solution
 % - n_iter      number of iterations
 
+
 E_0 = simulation_para.E_0;
 tol = simulation_para.tol;
 n_max = simulation_para.n_max;
-    
+
+t = tic ;
 % Initialization
 E_0([idx.slack;idx.vdc;idx.vscdc_vq]) = E_star([idx.slack;idx.vdc;idx.vscdc_vq]);
 E_re = real(E_0);
@@ -36,9 +38,8 @@ for k=1:n_max
     S = E.*conj(I);
     
     %% Mismatch calculation
-    dF = Mismatch(E,S,E_star,S_star,Grid_para,Filter_para,idx);
+    dF = Mismatch_1ph_quadratic_loss(E,S,E_star,S_star,Grid_para,Filter_para,idx);
     
-   
     %% Convergence check
     
     if(max(abs(dF))<tol && max(abs(dx)) < tol)
@@ -83,13 +84,13 @@ for k=1:n_max
     [J_PR, J_PX, J_QR, J_QX, J_ER, J_EX] = Jacobian_Powers_phase(E_re,E_im,Grid_para, J_PR, J_PX, J_QR, J_QX, J_ER, J_EX);
 
     % E0, E+, E-
-    [J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX] = Jacobian_Voltage_symmetric(Grid_para, Filter_para, J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX);
+%     [J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX] = Jacobian_Voltage_symmetric(Grid_para, Filter_para, J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX);
     
     % P+,Q+
-    [J_PpR, J_PpX, J_QpR, J_QpX] = Jacobian_Powers_symmetric(E_re, E_im, Grid_para, J_PpR, J_PpX, J_QpR, J_QpX);
+%     [J_PpR, J_PpX, J_QpR, J_QpX] = Jacobian_Powers_symmetric(E_re, E_im, Grid_para, J_PpR, J_PpX, J_QpR, J_QpX);
 
     % Interfacing converters/ Active Front Ends   
-    [J_AFEiR, J_AFEiX, J_AFErR, J_AFErX] = Jacobian_Converters(E_re,E_im, E_star, Grid_para, Filter_para, J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX, J_PpR, J_PpX, J_QpR, J_QpX, J_AFEiR, J_AFEiX, J_AFErR, J_AFErX);
+    [J_AFEiR, J_AFEiX, J_AFErR, J_AFErX] = Jacobian_Converters_1ph(E_re,E_im, E_star, Grid_para, Filter_para, J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX, J_PR, J_PX, J_QR, J_QX, J_AFEiR, J_AFEiX, J_AFErR, J_AFErX);
 
   
 %     % Remove extra rows (i.e., unnecessary equations)
@@ -138,7 +139,6 @@ for k=1:n_max
          J_PR(idx.pdc,:),J_PX(idx.pdc,:)];
          %J_ER(idx.vscdc_vq,:),J_EX(idx.vscdc_vq,:)]; %Pdc
      
-     
     %% Solution update
     
     % Solve
@@ -155,11 +155,15 @@ for k=1:n_max
         = dx( length(idx.pqac) + length(idx.pvac) + length(idx.pdc) +...
                  length(idx.vscac_pq) + length(idx.vscac_vq) + length(idx.vscdc_pq) + 1: end);
     
+
     % Update
     E_re = E_re + dE_re;
     E_im = E_im + dE_im;
+
 end
 
+time = toc(t);
 E = complex(E_re,E_im);
 end
+
 

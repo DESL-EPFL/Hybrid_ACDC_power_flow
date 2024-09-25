@@ -1,14 +1,9 @@
-function [Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc, n_timesteps, M_real, M_imag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M] = GetEMTPdata_LF(A_b,V_b,Adc_b, Vdc_b,repeat,ZIN,n_phases) 
+function [Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flow_I_angle, Idc_flow, Idc_inj, Vdc, n_timesteps, M_real, M_imag, Mabs,Nodal_P,Nodal_Q,Pdc_inj,M] = GetEMTPdata_LF(emtp_data,A_b,V_b,Adc_b, Vdc_b,repeat,ZIN,n_phases) 
 
 
-%% balanced
-   data = load('ACDC_balanced.mat'); 
-%% unbalanced
-%    data = load('ACDC_unbalanced_light.mat'); % light unblance
-%    data = load('ACDC_unbalanced_strong.mat'); % very strong unblance
-%    data = load('ACDC_unbalanced_strong_wlosses.mat'); % very strong unblance + filter
+
     
-    max_range = floor(length(data.B01_Va_mag_control)/10)*10;
+    max_range = floor(length(emtp_data.B01_Va_mag_control)/10)*10;
    
     I_b = A_b/(V_b.*sqrt(3));
     Idc_b = Adc_b/Vdc_b;
@@ -78,7 +73,7 @@ function [Nodal_V_mag,Nodal_V_angle, Nodal_I_mag, Nodal_I_angle, Flow_I_mag, Flo
                  'B18_Vc_mag_control'}; 
 Nodal_V_mag = [];
 for i = 1:n:length(Vac_bus_names)
-    Nodal_V_mag(:,(i-1)/n+1) = mean(reshape(data.(Vac_bus_names{i})(range),10,[]));
+    Nodal_V_mag(:,(i-1)/n+1) = mean(reshape(emtp_data.(Vac_bus_names{i})(range),10,[]));
 end
 Nodal_V_mag = Nodal_V_mag/(sqrt(2)/sqrt(3)*V_b);
 Nodal_V_mag(:,ZIN) = [];
@@ -141,7 +136,7 @@ Nodal_V_mag(:,ZIN) = [];
 
 Nodal_V_angle = [];
 for i = 1:n:length(Vac_bus_names)
-    Nodal_V_angle(:,(i-1)/n+1) = mean(reshape(data.(Vac_bus_names{i})(range),10,[])); %data.(Vac_bus_names{i})(range);
+    Nodal_V_angle(:,(i-1)/n+1) = mean(reshape(emtp_data.(Vac_bus_names{i})(range),10,[])); %data.(Vac_bus_names{i})(range);
 end
 Nodal_V_angle(:,ZIN) = [];
 
@@ -205,7 +200,7 @@ for i = 1:n:length(Iac_bus_names)
     if Iac_bus_names{i} == "no_inj"
         Nodal_I_mag(:,(i-1)/n+1) = zeros(size(Nodal_I_mag,1),1); 
     else
-        Nodal_I_mag(:,(i-1)/n+1) = mean(reshape(data.(Iac_bus_names{i})(range),10,[]));%data.(Iac_bus_names{i})(range);
+        Nodal_I_mag(:,(i-1)/n+1) = mean(reshape(emtp_data.(Iac_bus_names{i})(range),10,[]));%data.(Iac_bus_names{i})(range);
     end
 end
 Nodal_I_mag = Nodal_I_mag/sqrt(2)/I_b;
@@ -270,7 +265,7 @@ for i = 1:n:length(Iac_bus_names)
     if Iac_bus_names{i} == "no_inj"
         Nodal_I_angle(:,(i-1)/n+1) = zeros(size(Nodal_I_angle,1),1); 
     else
-        Nodal_I_angle(:,(i-1)/n+1) = mean(reshape(data.(Iac_bus_names{i})(range),10,[]));%data.(Iac_bus_names{i})(range);
+        Nodal_I_angle(:,(i-1)/n+1) = mean(reshape(emtp_data.(Iac_bus_names{i})(range),10,[]));%data.(Iac_bus_names{i})(range);
     end
 end
 Nodal_I_angle(:,ZIN) = [];
@@ -334,7 +329,7 @@ for i = 1:n:length(Pac_bus_names)
     if Pac_bus_names{i} == "no_inj"
         Nodal_P(:,(i-1)/n+1) = zeros(size(Nodal_P,1),1); 
     else
-        Nodal_P(:,(i-1)/n+1) = mean(reshape(data.(Pac_bus_names{i})(range),10,[]));%data.(Pac_bus_names{i})(range);
+        Nodal_P(:,(i-1)/n+1) = mean(reshape(emtp_data.(Pac_bus_names{i})(range),10,[]));%data.(Pac_bus_names{i})(range);
     end
 end
 Nodal_P = Nodal_P/A_b*3;
@@ -398,7 +393,7 @@ for i = 1:n:length(Qac_bus_names)
     if Qac_bus_names{i} == "no_inj"
         Nodal_Q(:,(i-1)/n+1) = zeros(size(Nodal_Q,1),1); 
     else
-        Nodal_Q(:,(i-1)/n+1) = mean(reshape(data.(Qac_bus_names{i})(range),10,[]));%data.(Qac_bus_names{i})(range);
+        Nodal_Q(:,(i-1)/n+1) = mean(reshape(emtp_data.(Qac_bus_names{i})(range),10,[]));%data.(Qac_bus_names{i})(range);
     end
 end
 Nodal_Q = Nodal_Q/A_b*3;
@@ -419,7 +414,7 @@ Iac_flow_name ={'I_B09_B15_Ia_mag_control',...
             
 Flow_I_mag = [];
 for i = 1:n:length(Iac_flow_name)
-    Flow_I_mag(:,(i-1)/n+1) = mean(reshape(data.(Iac_flow_name{i})(range),10,[]));%data.(Iac_flow_name{i})(range);
+    Flow_I_mag(:,(i-1)/n+1) = mean(reshape(emtp_data.(Iac_flow_name{i})(range),10,[]));%data.(Iac_flow_name{i})(range);
 end
 Flow_I_mag = Flow_I_mag/sqrt(2)/I_b;
 
@@ -438,7 +433,7 @@ Iac_flow_name ={'I_B09_B15_Ia_rad_control',...
                 'I_B07_B18_Ic_rad_control'};
 Flow_I_angle = [];
 for i = 1:n:length(Iac_flow_name)
-    Flow_I_angle(:,(i-1)/n+1) = mean(reshape(data.(Iac_flow_name{i})(range),10,[]));%data.(Iac_flow_name{i})(range);
+    Flow_I_angle(:,(i-1)/n+1) = mean(reshape(emtp_data.(Iac_flow_name{i})(range),10,[]));%data.(Iac_flow_name{i})(range);
 end
 
 
@@ -453,7 +448,7 @@ Vdc_p_bus_name={'B19_Vdc_flow_p_control',...
                 'B26_Vdc_p_control'};
 Vdc_p = [];
 for i = 1:length(Vdc_p_bus_name)
-    Vdc_p(:,i) = mean(reshape(data.(Vdc_p_bus_name{i})(range),10,[]));%data.(Vdc_p_bus_name{i})(range);
+    Vdc_p(:,i) = mean(reshape(emtp_data.(Vdc_p_bus_name{i})(range),10,[]));%data.(Vdc_p_bus_name{i})(range);
 end
 Vdc_p = Vdc_p/Vdc_b;
 
@@ -468,7 +463,7 @@ Vdc_n_bus_name={'B19_Vdc_flow_p_control',...
                 'B26_Vdc_p_control'};
 Vdc_n = [];
 for i = 1:length(Vdc_n_bus_name)
-    Vdc_n(:,i) = mean(reshape(data.(Vdc_n_bus_name{i})(range),10,[]));%data.(Vdc_n_bus_name{i})(range);
+    Vdc_n(:,i) = mean(reshape(emtp_data.(Vdc_n_bus_name{i})(range),10,[]));%data.(Vdc_n_bus_name{i})(range);
 end
 Vdc_n = Vdc_n/Vdc_b;
 
@@ -482,7 +477,7 @@ Idc_p_bus_name={'B19_Idc_flow_p_control',...
                 'B26_Idc_inj_p_control'};
 Idc_p = [];
 for i = 1:length(Idc_p_bus_name)
-    Idc_p(:,i) = mean(reshape(data.(Idc_p_bus_name{i})(range),10,[]));%data.(Idc_p_bus_name{i})(range);
+    Idc_p(:,i) = mean(reshape(emtp_data.(Idc_p_bus_name{i})(range),10,[]));%data.(Idc_p_bus_name{i})(range);
 end
 Idc_p = Idc_p/Idc_b;
 
@@ -497,7 +492,7 @@ Idc_n_bus_name={'B19_Idc_flow_p_control',...
                 'B26_Idc_inj_p_control'};
 Idc_n = [];
 for i = 1:length(Idc_n_bus_name)
-    Idc_n(:,i) = mean(reshape(data.(Idc_n_bus_name{i})(range),10,[]));%data.(Idc_n_bus_name{i})(range);
+    Idc_n(:,i) = mean(reshape(emtp_data.(Idc_n_bus_name{i})(range),10,[]));%data.(Idc_n_bus_name{i})(range);
 end
 Idc_n = Idc_n/Idc_b;
 
@@ -511,7 +506,7 @@ Pdc_p_bus_name={'B19_P_p_control',...
                 'B26_P_p_control'};
 Pdc_p = [];
 for i = 1:length(Pdc_p_bus_name)
-    Pdc_p(:,i) = mean(reshape(data.(Pdc_p_bus_name{i})(range),10,[]));%data.(Pdc_p_bus_name{i})(range);
+    Pdc_p(:,i) = mean(reshape(emtp_data.(Pdc_p_bus_name{i})(range),10,[]));%data.(Pdc_p_bus_name{i})(range);
 end
 Pdc_p = Pdc_p/Adc_b;
 
@@ -525,7 +520,7 @@ Pdc_n_bus_name={'B19_P_n_control',...
                 'B26_P_n_control'};
 Pdc_n = [];
 for i = 1:length(Pdc_n_bus_name)
-    Pdc_n(:,i) = mean(reshape(data.(Pdc_n_bus_name{i})(range),10,[]));%data.(Pdc_n_bus_name{i})(range);
+    Pdc_n(:,i) = mean(reshape(emtp_data.(Pdc_n_bus_name{i})(range),10,[]));%data.(Pdc_n_bus_name{i})(range);
 end
 Pdc_n = Pdc_n/Adc_b;
 
@@ -549,7 +544,7 @@ M_name = {  'VSI1_Mreal_a_2_control',...
             'VSI4_Mreal_c_2_control'};
 M_real = [];
 for i = 1:n:length(M_name)
-    M_real(:,(i-1)/n+1) = mean(reshape(data.(M_name{i})(range),10,[]));%data.(M_name{i})(range);
+    M_real(:,(i-1)/n+1) = mean(reshape(emtp_data.(M_name{i})(range),10,[]));%data.(M_name{i})(range);
 end
 M_real = M_real*(Vdc_b/2)/(sqrt(2)/sqrt(3)*V_b)*2/2;%(Vdc_b/2)/(sqrt(2)/sqrt(3)*V_b)*2/2;
 
@@ -570,7 +565,7 @@ M_name = {  'VSI1_Mimag_a_2_control',...
 
 M_imag = [];
 for i = 1:n:length(M_name)
-    M_imag(:,(i-1)/n+1) = mean(reshape(data.(M_name{i})(range),10,[]));%data.(M_name{i})(range);
+    M_imag(:,(i-1)/n+1) = mean(reshape(emtp_data.(M_name{i})(range),10,[]));%data.(M_name{i})(range);
 end
 M_imag = M_imag*(Vdc_b/2)/(sqrt(2)/sqrt(3)*V_b)*2/2;%(Vdc_b/2)/(sqrt(2)/sqrt(3)*V_b)*2/2;
 

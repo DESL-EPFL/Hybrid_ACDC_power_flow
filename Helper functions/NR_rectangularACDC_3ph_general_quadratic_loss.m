@@ -1,4 +1,4 @@
-function [E,J,n_iter] = NR_rectangularACDC_3ph_general(Grid_para,Filter_para,S_star,E_star,idx,simulation_para)
+function [E,J,n_iter] = NR_rectangularACDC_3ph_general_slack(Grid_para,Filter_para,S_star,E_star,E_0,idx,tol,n_max)
 % INPUT
 % - Grid_para   
 % - Filter_para
@@ -15,16 +15,13 @@ function [E,J,n_iter] = NR_rectangularACDC_3ph_general(Grid_para,Filter_para,S_s
 % - E           solution voltages (phasors)
 % - J           Jacobian at the solution
 % - n_iter      number of iterations
-
-E_0 = simulation_para.E_0;
-tol = simulation_para.tol;
-n_max = simulation_para.n_max;
-    
+t = tic 
 % Initialization
 E_0([idx.slack;idx.vdc;idx.vscdc_vq]) = E_star([idx.slack;idx.vdc;idx.vscdc_vq]);
 E_re = real(E_0);
 E_im = imag(E_0);
 dx = 1;
+K =  ones(length(idx.slack),1) / (length(idx.slack)/Grid_para.n_ph) ;
 
 for k=1:n_max
     
@@ -32,13 +29,12 @@ for k=1:n_max
     
     % Compute nodal voltages/currents/powers
     E = complex(E_re,E_im);
-    I = complex(Grid_para.G,Grid_para.B)*E;
+    I = complex(Grid_para.YY)*E;
     S = E.*conj(I);
     
     %% Mismatch calculation
-    dF = Mismatch(E,S,E_star,S_star,Grid_para,Filter_para,idx);
+    dF = Mismatch_slack(E,S,E_star,S_star,Grid_para,Filter_para,idx,K);
     
-   
     %% Convergence check
     
     if(max(abs(dF))<tol && max(abs(dx)) < tol)
@@ -47,7 +43,7 @@ for k=1:n_max
     elseif(k==n_max)
         disp('NR algorithm reached the maximum number of iterations!');
     end
-    
+     
     %%  Jacobian construction
     
     % Extract real/imaginary part
@@ -91,7 +87,12 @@ for k=1:n_max
     % Interfacing converters/ Active Front Ends   
     [J_AFEiR, J_AFEiX, J_AFErR, J_AFErX] = Jacobian_Converters(E_re,E_im, E_star, Grid_para, Filter_para, J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX, J_PpR, J_PpX, J_QpR, J_QpX, J_AFEiR, J_AFEiX, J_AFErR, J_AFErX);
 
-  
+    Slack_weights = 1 * ones(length(idx.slack),1);
+    Slack_max = 1 * ones(length(idx.slack),1);
+    [J_SPR, J_SPX, J_SER, J_SEX] = Jacobian_Slack_Powers_phase(E_re,E_im,Grid_para);
+
+    
+    
 %     % Remove extra rows (i.e., unnecessary equations)
 %     J_PR(sort([idx.slack;idx.vdc;idx.vscac_pq;idx.vscac_vq ;idx.vscdc_pq;idx.vscdc_vq]),:)=[];
 %     J_PX(sort([idx.slack;idx.vdc;idx.vscac_pq;idx.vscac_vq ;idx.vscdc_pq;idx.vscdc_vq]),:)=[];
@@ -124,9 +125,13 @@ for k=1:n_max
     J_AFEiR(:,sort([idx.slack;idx.vdc;idx.vscdc_vq]))=[];
     J_AFEiX(:,sort([idx.slack;idx.vdc;idx.pdc;idx.vscdc_pq;idx.vscdc_vq]))=[];
 
+    J_SPR(:,sort([idx.slack;idx.vdc;idx.vscdc_vq]))=[];
+    J_SPX(:,sort([idx.slack;idx.vdc;idx.pdc;idx.vscdc_pq;idx.vscdc_vq]))=[];
+    J_SER(:,sort([idx.slack;idx.vdc;idx.vscdc_vq]))=[];
+    J_SEX(:,sort([idx.slack;idx.vdc;idx.pdc;idx.vscdc_pq;idx.vscdc_vq]))=[];
     
-     
-     J =[J_PR(idx.pqac,:),J_PX(idx.pqac,:); %PQac real
+    
+    J =[ J_PR(idx.pqac,:),J_PX(idx.pqac,:); %PQac real
          J_QR(idx.pqac,:),J_QX(idx.pqac,:); %PQac imag
          J_PR(idx.pvac,:),J_PX(idx.pvac,:); %PVac real
          J_ER(idx.pvac,:),J_EX(idx.pvac,:); %PVac imag
@@ -138,7 +143,11 @@ for k=1:n_max
          J_PR(idx.pdc,:),J_PX(idx.pdc,:)];
          %J_ER(idx.vscdc_vq,:),J_EX(idx.vscdc_vq,:)]; %Pdc
      
-     
+%     J_slack = diag(-1*real(S(idx.slack)));
+    J_slack = sum(reshape(real(S(idx.slack)),Grid_para.n_ph,length(idx.slack)/Grid_para.n_ph),2);
+    J_slack = repmat(J_slack,length(idx.slack)/Grid_para.n_ph,1);
+    
+    J = blkdiag(J,-diag(J_slack));
     %% Solution update
     
     % Solve
@@ -153,13 +162,18 @@ for k=1:n_max
     dE_im = zeros(length(E_im),1);
     dE_im(sort([idx.pqac;idx.pvac;idx.vscac_vq;idx.vscac_pq]),1)...
         = dx( length(idx.pqac) + length(idx.pvac) + length(idx.pdc) +...
-                 length(idx.vscac_pq) + length(idx.vscac_vq) + length(idx.vscdc_pq) + 1: end);
+                 length(idx.vscac_pq) + length(idx.vscac_vq) + length(idx.vscdc_pq) + 1: end- length(idx.slack));
+             
+    dK = dx(end - length(idx.slack) +1 : end);
     
     % Update
     E_re = E_re + dE_re;
     E_im = E_im + dE_im;
+    K = K + dK;
 end
 
+toc(t);
 E = complex(E_re,E_im);
 end
+
 
